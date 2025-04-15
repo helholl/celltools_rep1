@@ -194,6 +194,7 @@ def cell_from_cif(
 
         _out = []
         for _op_atms in _atmssym:
+            #to_do: no duplicate atoms!
             _out += _op_atms
         return Cell(_latt, _out)
     else:
