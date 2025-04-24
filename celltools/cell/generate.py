@@ -193,8 +193,19 @@ def cell_from_cif(
             _atmssym.append(_op_atms)
 
         _out = []
+        tolerance = 1e-5
+
+        def atom_exists(atom, atom_list):
+            for existing_atom in atom_list:
+                if(atom.element == existing_atom.element and (atom.coords - existing_atom.coords).abs < tolerance):
+                    return True
+            return False
+            
         for _op_atms in _atmssym:
-            _out += _op_atms
+            for atm in _op_atms:
+                if not atom_exists(atm, _out):
+                    _out.append(atm)
+
         return Cell(_latt, _out)
     else:
         return Cell(_latt, _atms)
