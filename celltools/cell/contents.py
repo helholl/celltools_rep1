@@ -4,6 +4,8 @@ from itertools import combinations
 
 import numpy as np
 from crystals.atom import Element, ElementLike
+from sklearn.cluster import DBSCAN
+from sklearn.neighbors import NearestNeighbors
 
 from celltools.linalg import Vector, Basis
 from celltools.linalg.basis import LinearAlgebraError
@@ -178,6 +180,9 @@ class Atom(Element):
             return f"< {self.label} @ {self.coords}>"
         else:
             return f"< {self.element} @ {self.coords}>"
+        
+    def __str__(self) -> str:
+        return self.__repr__()
 
     def __eq__(self, other: "Atom") -> bool:
         if isinstance(other, Atom):
@@ -547,7 +552,7 @@ class Cell:
         """
         self._molecules.append(molc)
 
-    def atoms_to_molecule(self, atom_number: Union[int, List] = 0):
+    def atoms_to_molecule(self, atom_number: Union[int, List] = 0, eps: float = 0, min_samples: int = 0):
         """
         converts atom list part wise into molecules in the unit cells
         Parameters
@@ -563,12 +568,29 @@ class Cell:
             self._atoms = []
 
         elif isinstance(atom_number, int) and atom_number > 0:
-            no_of_molecules = int(len(self.atoms) / atom_number)
-            for nom in range(no_of_molecules):
-                _molc = []
-                for an in range(atom_number):
-                    _molc.append(self.atoms[nom * atom_number + an])
-                self.add_molecule(Molecule(_molc))
+            #convert into kartesian coordinates
+            kart_coords = np.array([atm.coords.global_coord for atm in self.atoms])
+
+            # DBSCAN-Clustering with radius ~ size of molecule
+            clustering = DBSCAN(eps, min_samples).fit(kart_coords)
+            labels = clustering.labels_
+
+            # group atoms by label(representing molecules)
+            clusters = {}
+            for label, atom in zip(labels, self.atoms):
+                if label == -1:
+                    continue  # -1 = noise
+                clusters.setdefault(label, []).append(atom)
+            molecules = [Molecule(_molc) for _molc in clusters.values() if len(_molc) == atom_number]
+            for molecule in molecules:
+                self.add_molecule(molecule)
+
+            # no_of_molecules = int(len(self.atoms) / atom_number)
+            # for nom in range(no_of_molecules):
+            #     _molc = []
+            #     for an in range(atom_number):
+            #         _molc.append(self.atoms[nom * atom_number + an])
+            #     self.add_molecule(Molecule(_molc))
 
         elif isinstance(atom_number, list):
             start_index = 0
