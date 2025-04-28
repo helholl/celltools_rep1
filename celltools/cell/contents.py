@@ -561,6 +561,12 @@ class Cell:
             number of atoms in one molecule. If only an integer is given all molecules are assumed to have same number
             of atoms. If list is given, atoms are converted into molecules with number of atoms given in list.
             if atom_number=0 all atoms are converted into one molecule
+
+        eps: float
+            maximum distance between two atoms for them to be accounted as neighbors
+
+        min_samples: int
+            minimum numbers of neighbors, for the atom to be considered part of the same molecules as the neighbors
         """
 
         if isinstance(atom_number, int) and atom_number == 0:
