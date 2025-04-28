@@ -578,7 +578,7 @@ class Cell:
             kart_coords = np.array([atm.coords.global_coord for atm in self.atoms])
 
             # DBSCAN-Clustering with radius ~ size of molecule
-            clustering = DBSCAN(eps, min_samples).fit(kart_coords)
+            clustering = DBSCAN(eps=eps, min_samples=min_samples).fit(kart_coords)
             labels = clustering.labels_
 
             # group atoms by label(representing molecules)
